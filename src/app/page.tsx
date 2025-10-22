@@ -14,6 +14,9 @@ export default function Home() {
   const [msPerWorm, setMsPerWorm] = useState<number>(10000);
   const [growMs, setGrowMs] = useState<number>(10000);
   const [maxLife, setMaxLife] = useState<number>(120000);
+  const [wormSpeedUpgradeCost, setWormSpeedUpgradeCost] = useState<number>(100);
+  const [growUpgradeCost, setGrowUpgradeCost] = useState<number>(80);
+  const [maxLifeUpgradeCost, setMaxLifeUpgradeCost] = useState<number>(150);
 
   const hatchEgg = () => {
     const newBird: Bird = {
@@ -93,6 +96,82 @@ export default function Home() {
       >
         <span className="text-2xl text-stone-800">Hatch a egg!</span>
       </button>
+      <h1 className="text-2xl font-bold text-white mb-4 text-center">
+        Upgrades
+      </h1>
+      <div className="grid grid-cols-2 gap-4 mb-8 w-full max-w-md">
+        <div className="bg-stone-900 p-4 mb-4 shadow-offset">
+          <p className="text-stone-100 mb-2 font-semibold">
+            Worm Speed Upgrade
+          </p>
+          <p className="text-stone-300 text-sm mb-1">
+            Current: {(msPerWorm / 1000).toFixed(1)}s per worm per adult bird
+          </p>
+          <p className="text-stone-300 text-sm mb-2">
+            After upgrade: {(Math.floor(msPerWorm / 1.1) / 1000).toFixed(1)}s
+            per worm per adult bird
+          </p>
+          <button
+            onClick={() => {
+              if (worms >= wormSpeedUpgradeCost) {
+                setWorms(worms - wormSpeedUpgradeCost);
+                setMsPerWorm(Math.floor(msPerWorm / 1.1));
+                setWormSpeedUpgradeCost(Math.floor(wormSpeedUpgradeCost * 1.2));
+              }
+            }}
+            disabled={worms < wormSpeedUpgradeCost}
+            className="font-bold bg-stone-700 px-2 py-1 hover:bg-stone-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Buy ({wormSpeedUpgradeCost} worms)
+          </button>
+        </div>
+        <div className="bg-stone-900 p-4 mb-4 shadow-offset">
+          <p className="text-stone-100 mb-2 font-semibold">Growth Upgrade</p>
+          <p className="text-stone-300 text-sm mb-1">
+            Current: {(growMs / 1000).toFixed(1)}s to grow
+          </p>
+          <p className="text-stone-300 text-sm mb-2">
+            After upgrade: {(Math.floor(growMs / 1.3) / 1000).toFixed(1)}s to
+            grow
+          </p>
+          <button
+            onClick={() => {
+              if (worms >= growUpgradeCost) {
+                setWorms(worms - growUpgradeCost);
+                setGrowMs(Math.floor(growMs / 1.1));
+                setGrowUpgradeCost(Math.floor(growUpgradeCost * 1.1));
+              }
+            }}
+            disabled={worms < growUpgradeCost}
+            className="font-bold bg-stone-700 px-2 py-1 hover:bg-stone-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Buy ({growUpgradeCost} worms)
+          </button>
+        </div>
+        <div className="bg-stone-900 p-4 mb-4 shadow-offset">
+          <p className="text-stone-100 mb-2 font-semibold">Max Life Upgrade</p>
+          <p className="text-stone-300 text-sm mb-1">
+            Current: {(maxLife / 1000).toFixed(0)}s max life
+          </p>
+          <p className="text-stone-300 text-sm mb-2">
+            After upgrade: {(Math.floor(maxLife * 1.2) / 1000).toFixed(0)}s max
+            life
+          </p>
+          <button
+            onClick={() => {
+              if (worms >= maxLifeUpgradeCost) {
+                setWorms(worms - maxLifeUpgradeCost);
+                setMaxLife(Math.floor(maxLife * 1.2));
+                setMaxLifeUpgradeCost(Math.floor(maxLifeUpgradeCost * 1.2));
+              }
+            }}
+            disabled={worms < maxLifeUpgradeCost}
+            className="font-bold bg-stone-700 px-2 py-1 hover:bg-stone-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Buy ({maxLifeUpgradeCost} worms)
+          </button>
+        </div>
+      </div>
       <div className="w-full max-w-md">
         {birds.map((bird, index) => (
           <div
