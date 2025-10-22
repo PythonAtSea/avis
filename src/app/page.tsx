@@ -11,8 +11,9 @@ type Bird = {
 export default function Home() {
   const [birds, setBirds] = useState<Bird[]>([]);
   const [worms, setWorms] = useState<number>(0);
-  const [msPerWorm, setMsPerWorm] = useState<number>(2000);
+  const [msPerWorm, setMsPerWorm] = useState<number>(10000);
   const [growMs, setGrowMs] = useState<number>(10000);
+  const [maxLife, setMaxLife] = useState<number>(120000);
 
   const hatchEgg = () => {
     const newBird: Bird = {
@@ -27,17 +28,22 @@ export default function Home() {
     const interval = setInterval(() => {
       console.log("yo");
       setBirds((prevBirds) =>
-        prevBirds.map((bird) => {
-          const ageInMs = new Date().getTime() - bird.birthDate.getTime();
-          if (!bird.isAdult && ageInMs >= growMs) {
-            return { ...bird, isAdult: true };
-          }
-          return bird;
-        })
+        prevBirds
+          .filter((bird) => {
+            const ageInMs = new Date().getTime() - bird.birthDate.getTime();
+            return ageInMs < maxLife;
+          })
+          .map((bird) => {
+            const ageInMs = new Date().getTime() - bird.birthDate.getTime();
+            if (!bird.isAdult && ageInMs >= growMs) {
+              return { ...bird, isAdult: true };
+            }
+            return bird;
+          })
       );
-    }, 500);
+    }, 0);
     return () => clearInterval(interval);
-  }, [growMs]);
+  }, [growMs, maxLife]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -53,47 +59,68 @@ export default function Home() {
   }, [msPerWorm]);
 
   return (
-    <div className="min-h-screen bg-amber-950 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center p-4">
       <h1 className="text-5xl font-bold text-white mb-8 text-center">Avis</h1>
       <div className="grid grid-cols-2 gap-4 mb-8 w-full max-w-md">
-        <div className="bg-amber-900 p-4 text-center shadow-offset">
-          <p className="text-amber-100 text-sm">Worms</p>
+        <div className="bg-stone-900 p-4 text-center shadow-offset">
+          <p className="text-stone-100 text-sm">
+            Worms:{" "}
+            {(
+              birds.filter((b) => b.isAdult).length *
+              (1000 / msPerWorm)
+            ).toFixed(2)}{" "}
+            per second
+          </p>
           <p className="text-3xl font-bold text-white">{worms}</p>
         </div>
-        <div className="bg-amber-900 p-4 text-center shadow-offset">
-          <p className="text-amber-100 text-sm">Woodcock stats</p>
+        <div className="bg-stone-900 p-4 text-center shadow-offset">
+          <p className="text-stone-100 text-sm">Woodcock stats</p>
           <p className="">
             <span>Adults: </span>
-            <span className="text-amber-100 font-bold">
+            <span className="text-stone-100 font-bold">
               {birds.filter((b) => b.isAdult).length}
             </span>
             <span> Chicks: </span>
-            <span className="text-amber-100 font-bold">
+            <span className="text-stone-100 font-bold">
               {birds.filter((b) => !b.isAdult).length}
             </span>
           </p>
         </div>
       </div>
       <button
-        className="w-32 h-32 -full bg-amber-200 shadow-offset hover:bg-amber-400 transition-all mb-8 flex items-center justify-center"
+        className="w-32 h-32 -full bg-stone-200 shadow-offset hover:bg-stone-400 transition-all mb-8 flex items-center justify-center"
         onClick={hatchEgg}
       >
-        <span className="text-2xl text-amber-800">Hatch a egg!</span>
+        <span className="text-2xl text-stone-800">Hatch a egg!</span>
       </button>
       <div className="w-full max-w-md">
         {birds.map((bird, index) => (
           <div
             key={index}
-            className="bg-amber-800 text-amber-100 p-4 mb-4 shadow-offset-lg"
+            className="bg-stone-800 text-stone-100 p-4 mb-4 shadow-offset-lg"
           >
             <h2 className="text-xl font-bold mb-2">{bird.name}</h2>
             <p>
               Born at{" "}
-              <span className="text-amber-400 font-bold">
+              <span className="text-stone-400 font-bold">
                 {bird.birthDate.toLocaleString()}
               </span>
             </p>
             <p>Status: {bird.isAdult ? "Adult" : "Chick"}</p>
+            {(() => {
+              const ageInMs = new Date().getTime() - bird.birthDate.getTime();
+              const progress = bird.isAdult
+                ? Math.min(((ageInMs - growMs) / (maxLife - growMs)) * 100, 100)
+                : Math.min((ageInMs / growMs) * 100, 100);
+              return (
+                <div className="w-full bg-stone-700 h-2 mt-2">
+                  <div
+                    className="bg-stone-400 h-2"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+              );
+            })()}
           </div>
         ))}
       </div>
