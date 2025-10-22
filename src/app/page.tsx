@@ -8,6 +8,35 @@ type Bird = {
   name: string;
 };
 
+const BIRD_NAMES = [
+  "Archimedes",
+  "Beatrice",
+  "Cedar",
+  "Delilah",
+  "Ember",
+  "Falcon",
+  "Gideon",
+  "Harper",
+  "Iris",
+  "Jasper",
+  "Kestrel",
+  "Luna",
+  "Maverick",
+  "Nova",
+  "Oliver",
+  "Phoenix",
+  "Quinn",
+  "Raven",
+  "Sage",
+  "Theron",
+  "Ulysses",
+  "Vesper",
+  "Willow",
+  "Xavier",
+  "Yarrow",
+  "Zephyr",
+];
+
 export default function Home() {
   const [birds, setBirds] = useState<Bird[]>([]);
   const [worms, setWorms] = useState<number>(0);
@@ -18,11 +47,35 @@ export default function Home() {
   const [growUpgradeCost, setGrowUpgradeCost] = useState<number>(80);
   const [maxLifeUpgradeCost, setMaxLifeUpgradeCost] = useState<number>(150);
 
+  const getOrdinal = (num: number): string => {
+    const j = num % 10;
+    const k = num % 100;
+    if (j === 1 && k !== 11) return `${num}st`;
+    if (j === 2 && k !== 12) return `${num}nd`;
+    if (j === 3 && k !== 13) return `${num}rd`;
+    return `${num}th`;
+  };
+
+  const getNextName = (existingBirds: Bird[]) => {
+    const randomBaseName =
+      BIRD_NAMES[Math.floor(Math.random() * BIRD_NAMES.length)];
+    const usedCount = existingBirds.filter((bird) =>
+      bird.name.startsWith(randomBaseName)
+    ).length;
+
+    if (usedCount === 0) {
+      return randomBaseName;
+    }
+
+    return `${randomBaseName} the ${getOrdinal(usedCount + 1)}`;
+  };
+
   const hatchEgg = () => {
+    const newName = getNextName(birds);
     const newBird: Bird = {
       birthDate: new Date(),
       isAdult: false,
-      name: `Bird #${birds.length + 1}`,
+      name: newName,
     };
     setBirds([...birds, newBird]);
   };
@@ -149,7 +202,7 @@ export default function Home() {
           </button>
         </div>
         <div className="bg-stone-900 p-4 mb-4 shadow-offset">
-          <p className="text-stone-100 mb-2 font-semibold">Max Life Upgrade</p>
+          <p className="text-stone-100 mb-2 font-semibold">Bird Life Upgrade</p>
           <p className="text-stone-300 text-sm mb-1">
             Current: {(maxLife / 1000).toFixed(0)}s max life
           </p>
@@ -176,7 +229,7 @@ export default function Home() {
         {birds.map((bird, index) => (
           <div
             key={index}
-            className="bg-stone-800 text-stone-100 p-4 mb-4 shadow-offset-lg"
+            className="bg-stone-900 text-stone-100 p-4 mb-4 shadow-offset-lg"
           >
             <h2 className="text-xl font-bold mb-2">{bird.name}</h2>
             <p>
