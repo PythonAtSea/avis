@@ -143,7 +143,20 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-950 flex flex-col p-4">
       <style>{scrollbarStyles}</style>
-      <h1 className="text-5xl font-bold text-white mb-8 text-center">Avis</h1>
+
+      {(typeof window !== "undefined" &&
+        window.location.hostname === "localhost" && (
+          <button
+            className="text-5xl font-bold text-white mb-8 text-center"
+            onClick={() => {
+              setWorms((prev) => prev + 500);
+            }}
+          >
+            + 500
+          </button>
+        )) || (
+        <h1 className="text-5xl font-bold text-white mb-8 text-center">Avis</h1>
+      )}
       <div className="flex flex-1 gap-4 min-h-0">
         <div
           className="w-80 overflow-y-auto custom-scrollbar"
@@ -213,7 +226,7 @@ export default function Home() {
               <p className="text-stone-300 text-xs mb-2">Foraging Progress</p>
               <div className="w-full bg-stone-700 h-2">
                 <div
-                  className="bg-amber-600 h-2"
+                  className="bg-green-600 h-2"
                   style={{
                     width: `${
                       birds.filter((b) => b.isAdult).length > 0
@@ -281,7 +294,9 @@ export default function Home() {
                 }
               }}
               disabled={worms < wormSpeedUpgradeCost}
-              className="font-bold bg-stone-700 px-2 py-1 hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`font-bold bg-stone-700 px-2 py-1 ${
+                worms >= wormSpeedUpgradeCost ? "hover:bg-stone-600" : ""
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Buy ({wormSpeedUpgradeCost} worms)
             </button>
@@ -304,7 +319,9 @@ export default function Home() {
                 }
               }}
               disabled={worms < growUpgradeCost}
-              className="font-bold bg-stone-700 px-2 py-1 hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`font-bold bg-stone-700 px-2 py-1 ${
+                worms >= growUpgradeCost ? "hover:bg-stone-600" : ""
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Buy ({growUpgradeCost} worms)
             </button>
@@ -330,7 +347,9 @@ export default function Home() {
                 }
               }}
               disabled={worms < maxLifeUpgradeCost}
-              className="font-bold bg-stone-700 px-2 py-1 hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`font-bold bg-stone-700 px-2 py-1 ${
+                worms >= maxLifeUpgradeCost ? "hover:bg-stone-600" : ""
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Buy ({maxLifeUpgradeCost} worms)
             </button>
@@ -383,6 +402,7 @@ export default function Home() {
             <button
               onClick={() => {
                 if (birds.length > 0 && worms >= 500) {
+                  setLastWormTime(Date.now());
                   setWorms(worms - 500);
                   setMsPerWorm(Math.floor(msPerWorm / 3));
                   setBlazeStartTime(new Date());
@@ -400,10 +420,19 @@ export default function Home() {
                 birds.length === 0 ||
                 blazeStartTime.getTime() + 120000 > Date.now()
               }
-              className="font-bold bg-stone-700 px-2 py-1 hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`font-bold bg-stone-700 px-2 py-1 ${
+                worms >= 500 &&
+                birds.length > 0 &&
+                blazeStartTime.getTime() + 120000 <= Date.now()
+                  ? "hover:bg-stone-600"
+                  : ""
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Activate (500 worms)
             </button>
+          </div>
+          <div className={`p-4 shadow-offset mb-4 relative bg-stone-900`}>
+            <p className="text-stone-100 mb-2 font-semibold">Sacrifice</p>
           </div>
         </div>
       </div>
