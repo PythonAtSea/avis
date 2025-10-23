@@ -58,11 +58,13 @@ export default function Home() {
   const [worms, setWorms] = useState<number>(0);
   const [msPerWorm, setMsPerWorm] = useState<number>(10000);
   const [growMs, setGrowMs] = useState<number>(10000);
-  const [maxLife, setMaxLife] = useState<number>(120000);
+  const [maxLife, setMaxLife] = useState<number>(70000);
   const [wormSpeedUpgradeCost, setWormSpeedUpgradeCost] = useState<number>(100);
   const [growUpgradeCost, setGrowUpgradeCost] = useState<number>(80);
   const [maxLifeUpgradeCost, setMaxLifeUpgradeCost] = useState<number>(150);
+  const [deadBirds, setDeadBirds] = useState<number>(0);
   const [lastWormTime, setLastWormTime] = useState<number>(Date.now());
+  const [blazeStartTime, setBlazeStartTime] = useState<Date>(new Date(0));
 
   const getOrdinal = (num: number): string => {
     const j = num % 10;
@@ -100,20 +102,21 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       console.log("yo");
-      setBirds((prevBirds) =>
-        prevBirds
-          .filter((bird) => {
-            const ageInMs = new Date().getTime() - bird.birthDate.getTime();
-            return ageInMs < maxLife;
-          })
-          .map((bird) => {
-            const ageInMs = new Date().getTime() - bird.birthDate.getTime();
-            if (!bird.isAdult && ageInMs >= growMs) {
-              return { ...bird, isAdult: true };
-            }
-            return bird;
-          })
-      );
+      setBirds((prevBirds) => {
+        const aliveBirds = prevBirds.filter((bird) => {
+          const ageInMs = new Date().getTime() - bird.birthDate.getTime();
+          return ageInMs < maxLife;
+        });
+        const deadCount = prevBirds.length - aliveBirds.length;
+        setDeadBirds((prev) => prev + deadCount);
+        return aliveBirds.map((bird) => {
+          const ageInMs = new Date().getTime() - bird.birthDate.getTime();
+          if (!bird.isAdult && ageInMs >= growMs) {
+            return { ...bird, isAdult: true };
+          }
+          return bird;
+        });
+      });
     }, 0);
     return () => clearInterval(interval);
   }, [growMs, maxLife]);
@@ -185,6 +188,14 @@ export default function Home() {
                 })()}
               </div>
             ))}
+          {birds.length === 0 && (
+            <div className="bg-stone-900 text-stone-100 p-4 mb-4 shadow-offset-lg">
+              No birds yet. Hatch some eggs, that&apos;s kinda the entire point
+              of this! Once you have some Woodcocks, they will grow up from
+              chicks to adults, and then they&apos;ll start foraging for worms
+              for you.
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col items-center justify-center flex-1 gap-8">
@@ -216,17 +227,21 @@ export default function Home() {
                 ></div>
               </div>
             </div>
-            <div className="bg-stone-900 p-4 text-center shadow-offset">
-              <p className="text-stone-100 text-sm">Woodcock stats</p>
+            <div className="bg-stone-900 p-4 shadow-offset">
+              <p className="text-stone-100 text-lg font-bold">Woodcock Fall</p>
               <p className="">
                 <span>Adults: </span>
                 <span className="text-stone-100 font-bold">
                   {birds.filter((b) => b.isAdult).length}
                 </span>
+                <br />
                 <span> Chicks: </span>
                 <span className="text-stone-100 font-bold">
                   {birds.filter((b) => !b.isAdult).length}
                 </span>
+                <br />
+                <span> Dead: </span>
+                <span className="text-stone-100 font-bold">{deadBirds}</span>
               </p>
             </div>
           </div>
@@ -238,14 +253,15 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="w-80 overflow-y-auto custom-scrollbar">
-          <h2 className="text-2xl font-bold text-white mb-4 sticky top-0 bg-stone-950">
-            Upgrades
+        <div
+          className="w-80 overflow-y-auto custom-scrollbar"
+          style={{ height: "calc(100vh - 7rem)" }}
+        >
+          <h2 className="text-2xl font-bold text-white mb-4 top-0 bg-stone-950">
+            Permanent Upgrades
           </h2>
           <div className="bg-stone-900 p-4 shadow-offset mb-4">
-            <p className="text-stone-100 mb-2 font-semibold">
-              Worm Speed Upgrade
-            </p>
+            <p className="text-stone-100 mb-2 font-semibold">Foraging Speed</p>
             <p className="text-stone-300 text-sm mb-1">
               Current: {(msPerWorm / 1000).toFixed(1)}s per worm per adult bird
             </p>
@@ -271,7 +287,7 @@ export default function Home() {
             </button>
           </div>
           <div className="bg-stone-900 p-4 shadow-offset mb-4">
-            <p className="text-stone-100 mb-2 font-semibold">Growth Upgrade</p>
+            <p className="text-stone-100 mb-2 font-semibold">Growth Speed</p>
             <p className="text-stone-300 text-sm mb-1">
               Current: {(growMs / 1000).toFixed(1)}s to grow
             </p>
@@ -295,20 +311,21 @@ export default function Home() {
           </div>
           <div className="bg-stone-900 p-4 shadow-offset">
             <p className="text-stone-100 mb-2 font-semibold">
-              Bird Life Upgrade
+              Bird Life Length
             </p>
             <p className="text-stone-300 text-sm mb-1">
-              Current: {(maxLife / 1000).toFixed(0)}s max life
+              Current: {((maxLife - growMs) / 1000).toFixed(0)}s life length
             </p>
             <p className="text-stone-300 text-sm mb-2">
-              After upgrade: {(Math.floor(maxLife * 1.2) / 1000).toFixed(0)}s
-              max life
+              After upgrade:{" "}
+              {(Math.floor((maxLife - growMs) * 1.2) / 1000).toFixed(0)}s life
+              length
             </p>
             <button
               onClick={() => {
                 if (worms >= maxLifeUpgradeCost) {
                   setWorms(worms - maxLifeUpgradeCost);
-                  setMaxLife(Math.floor(maxLife * 1.2));
+                  setMaxLife(Math.floor((maxLife - growMs) * 1.2));
                   setMaxLifeUpgradeCost(Math.floor(maxLifeUpgradeCost * 1.2));
                 }
               }}
@@ -316,6 +333,76 @@ export default function Home() {
               className="font-bold bg-stone-700 px-2 py-1 hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Buy ({maxLifeUpgradeCost} worms)
+            </button>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4 mt-8">
+            Temporary Buffs
+          </h2>
+          <div
+            className={`${
+              blazeStartTime.getTime() + 30000 > Date.now()
+                ? "bg-amber-600 animate-pulse"
+                : "bg-stone-900"
+            } p-4 shadow-offset mb-4 relative`}
+          >
+            <p className="text-stone-100 mb-2 font-semibold">Blaze of glory</p>
+            <p className="text-stone-300 text-sm mb-1">
+              Triples foraging speed for 30 seconds, and then kills your entire
+              fall of woodocks (can only be used once every 2 minutes).
+            </p>
+            {(() => {
+              const now = Date.now();
+              const buffEndTime = blazeStartTime.getTime() + 30000;
+              const cooldownEndTime = blazeStartTime.getTime() + 120000;
+
+              if (now < buffEndTime) {
+                const timeLeft = buffEndTime - now;
+                const progress = (timeLeft / 30000) * 100;
+                return (
+                  <div className="w-full bg-stone-700 h-2 mb-2">
+                    <div
+                      className="bg-red-500 h-2 transition-all duration-100"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                );
+              } else {
+                const timeLeft = cooldownEndTime - now;
+                const progress = (timeLeft / 90000) * 100;
+                return (
+                  <div className="w-full bg-stone-700 h-2 mb-2">
+                    <div
+                      className="bg-blue-500 h-2 transition-all duration-100"
+                      style={{ width: `${Math.min(100 - progress, 100)}%` }}
+                    ></div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+            <button
+              onClick={() => {
+                if (birds.length > 0 && worms >= 500) {
+                  setWorms(worms - 500);
+                  setMsPerWorm(Math.floor(msPerWorm / 3));
+                  setBlazeStartTime(new Date());
+                  setTimeout(() => {
+                    setDeadBirds((prev) => prev + birds.length);
+                    setBirds([]);
+                  }, 30000);
+                  setTimeout(() => {
+                    setMsPerWorm(msPerWorm * 3);
+                  }, 30000);
+                }
+              }}
+              disabled={
+                worms < 500 ||
+                birds.length === 0 ||
+                blazeStartTime.getTime() + 120000 > Date.now()
+              }
+              className="font-bold bg-stone-700 px-2 py-1 hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Activate (500 worms)
             </button>
           </div>
         </div>
