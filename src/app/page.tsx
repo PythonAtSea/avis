@@ -18,7 +18,7 @@ const scrollbarStyles = `
   }
 `;
 
-type Bird = {
+type Woodcock = {
   birthDate: Date;
   isAdult: boolean;
   name: string;
@@ -54,7 +54,7 @@ const BIRD_NAMES = [
 ];
 
 export default function Home() {
-  const [birds, setBirds] = useState<Bird[]>([]);
+  const [woodcocks, setWoodcocks] = useState<Woodcock[]>([]);
   const [worms, setWorms] = useState<number>(0);
   const [msPerWorm, setMsPerWorm] = useState<number>(10000);
   const [growMs, setGrowMs] = useState<number>(10000);
@@ -65,6 +65,7 @@ export default function Home() {
   const [deadBirds, setDeadBirds] = useState<number>(0);
   const [lastWormTime, setLastWormTime] = useState<number>(Date.now());
   const [blazeStartTime, setBlazeStartTime] = useState<Date>(new Date(0));
+  const [sacrificeTime, setSacrificeTime] = useState<Date>(new Date(0));
 
   const getOrdinal = (num: number): string => {
     const j = num % 10;
@@ -75,11 +76,11 @@ export default function Home() {
     return `${num}th`;
   };
 
-  const getNextName = (existingBirds: Bird[]) => {
+  const getNextName = (existingWoodcocks: Woodcock[]) => {
     const randomBaseName =
       BIRD_NAMES[Math.floor(Math.random() * BIRD_NAMES.length)];
-    const usedCount = existingBirds.filter((bird) =>
-      bird.name.startsWith(randomBaseName)
+    const usedCount = existingWoodcocks.filter((woodcock) =>
+      woodcock.name.startsWith(randomBaseName)
     ).length;
 
     if (usedCount === 0) {
@@ -90,31 +91,31 @@ export default function Home() {
   };
 
   const hatchEgg = () => {
-    const newName = getNextName(birds);
-    const newBird: Bird = {
+    const newName = getNextName(woodcocks);
+    const newWoodcock: Woodcock = {
       birthDate: new Date(),
       isAdult: false,
       name: newName,
     };
-    setBirds([...birds, newBird]);
+    setWoodcocks([...woodcocks, newWoodcock]);
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
       console.log("yo");
-      setBirds((prevBirds) => {
-        const aliveBirds = prevBirds.filter((bird) => {
-          const ageInMs = new Date().getTime() - bird.birthDate.getTime();
+      setWoodcocks((prevWoodcocks) => {
+        const aliveWoodcocks = prevWoodcocks.filter((woodcock) => {
+          const ageInMs = new Date().getTime() - woodcock.birthDate.getTime();
           return ageInMs < maxLife;
         });
-        const deadCount = prevBirds.length - aliveBirds.length;
+        const deadCount = prevWoodcocks.length - aliveWoodcocks.length;
         setDeadBirds((prev) => prev + deadCount);
-        return aliveBirds.map((bird) => {
-          const ageInMs = new Date().getTime() - bird.birthDate.getTime();
-          if (!bird.isAdult && ageInMs >= growMs) {
-            return { ...bird, isAdult: true };
+        return aliveWoodcocks.map((woodcock) => {
+          const ageInMs = new Date().getTime() - woodcock.birthDate.getTime();
+          if (!woodcock.isAdult && ageInMs >= growMs) {
+            return { ...woodcock, isAdult: true };
           }
-          return bird;
+          return woodcock;
         });
       });
     }, 0);
@@ -123,12 +124,14 @@ export default function Home() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setBirds((prevBirds) => {
-        const adultCount = prevBirds.filter((bird) => bird.isAdult).length;
+      setWoodcocks((prevWoodcocks) => {
+        const adultCount = prevWoodcocks.filter(
+          (woodcock) => woodcock.isAdult
+        ).length;
         if (adultCount > 0) {
           setWorms((prevWorms) => prevWorms + adultCount / 2);
         }
-        return prevBirds;
+        return prevWoodcocks;
       });
       setLastWormTime(Date.now());
     }, msPerWorm);
@@ -163,28 +166,28 @@ export default function Home() {
           style={{ height: "calc(100vh - 7rem)" }}
         >
           <h2 className="text-2xl font-bold text-white mb-4 sticky top-0 bg-stone-950">
-            Birds
+            Woodcocks
           </h2>
-          {birds
+          {woodcocks
             .sort((a, b) => b.birthDate.getTime() - a.birthDate.getTime())
-            .map((bird, index) => (
+            .map((woodcock, index) => (
               <div
                 key={index}
                 className="bg-stone-900 text-stone-100 p-4 mb-4 shadow-offset-lg"
               >
                 <h2 className="text-xl font-bold mb-2">
-                  {bird.name} ({bird.isAdult ? "Adult" : "Chick"})
+                  {woodcock.name} ({woodcock.isAdult ? "Adult" : "Chick"})
                 </h2>
                 <p>
                   Born at{" "}
                   <span className="text-stone-400 font-bold">
-                    {bird.birthDate.toLocaleString()}
+                    {woodcock.birthDate.toLocaleString()}
                   </span>
                 </p>
                 {(() => {
                   const ageInMs =
-                    new Date().getTime() - bird.birthDate.getTime();
-                  const progress = bird.isAdult
+                    new Date().getTime() - woodcock.birthDate.getTime();
+                  const progress = woodcock.isAdult
                     ? Math.min(
                         ((ageInMs - growMs) / (maxLife - growMs)) * 100,
                         100
@@ -201,12 +204,12 @@ export default function Home() {
                 })()}
               </div>
             ))}
-          {birds.length === 0 && (
+          {woodcocks.length === 0 && (
             <div className="bg-stone-900 text-stone-100 p-4 mb-4 shadow-offset-lg">
-              No birds yet. Hatch some eggs, that&apos;s kinda the entire point
-              of this! Once you have some Woodcocks, they will grow up from
-              chicks to adults, and then they&apos;ll start foraging for worms
-              for you.
+              No woodcocks yet. Hatch some eggs, that&apos;s kinda the entire
+              point of this! Once you have some woodcocks, they will grow up
+              from chicks to adults, and then they&apos;ll start foraging for
+              worms for you.
             </div>
           )}
         </div>
@@ -217,7 +220,7 @@ export default function Home() {
               <p className="text-stone-100 text-sm">
                 Worms:{" "}
                 {(
-                  birds.filter((b) => b.isAdult).length *
+                  woodcocks.filter((b) => b.isAdult).length *
                   (1000 / msPerWorm)
                 ).toFixed(2)}{" "}
                 per second
@@ -229,7 +232,7 @@ export default function Home() {
                   className="bg-green-600 h-2"
                   style={{
                     width: `${
-                      birds.filter((b) => b.isAdult).length > 0
+                      woodcocks.filter((b) => b.isAdult).length > 0
                         ? Math.min(
                             ((Date.now() - lastWormTime) / msPerWorm) * 100,
                             100
@@ -245,12 +248,12 @@ export default function Home() {
               <p className="">
                 <span>Adults: </span>
                 <span className="text-stone-100 font-bold">
-                  {birds.filter((b) => b.isAdult).length}
+                  {woodcocks.filter((b) => b.isAdult).length}
                 </span>
                 <br />
                 <span> Chicks: </span>
                 <span className="text-stone-100 font-bold">
-                  {birds.filter((b) => !b.isAdult).length}
+                  {woodcocks.filter((b) => !b.isAdult).length}
                 </span>
                 <br />
                 <span> Dead: </span>
@@ -367,7 +370,7 @@ export default function Home() {
             <p className="text-stone-100 mb-2 font-semibold">Blaze of glory</p>
             <p className="text-stone-300 text-sm mb-1">
               Triples foraging speed for 30 seconds, and then kills your entire
-              fall of woodocks (can only be used once every 2 minutes).
+              fall of woodcocks (can only be used once every 2 minutes).
             </p>
             {(() => {
               const now = Date.now();
@@ -401,14 +404,14 @@ export default function Home() {
             })()}
             <button
               onClick={() => {
-                if (birds.length > 0 && worms >= 500) {
+                if (woodcocks.length > 0 && worms >= 500) {
                   setLastWormTime(Date.now());
                   setWorms(worms - 500);
                   setMsPerWorm(Math.floor(msPerWorm / 3));
                   setBlazeStartTime(new Date());
                   setTimeout(() => {
-                    setDeadBirds((prev) => prev + birds.length);
-                    setBirds([]);
+                    setDeadBirds((prev) => prev + woodcocks.length);
+                    setWoodcocks([]);
                   }, 30000);
                   setTimeout(() => {
                     setMsPerWorm(msPerWorm * 3);
@@ -417,12 +420,12 @@ export default function Home() {
               }}
               disabled={
                 worms < 500 ||
-                birds.length === 0 ||
+                woodcocks.length === 0 ||
                 blazeStartTime.getTime() + 120000 > Date.now()
               }
               className={`font-bold bg-stone-700 px-2 py-1 ${
                 worms >= 500 &&
-                birds.length > 0 &&
+                woodcocks.length > 0 &&
                 blazeStartTime.getTime() + 120000 <= Date.now()
                   ? "hover:bg-stone-600"
                   : ""
@@ -433,6 +436,75 @@ export default function Home() {
           </div>
           <div className={`p-4 shadow-offset mb-4 relative bg-stone-900`}>
             <p className="text-stone-100 mb-2 font-semibold">Sacrifice</p>
+            <p>
+              Kill 50 random woodcocks to get a 100% foraging speed boost for 3
+              minutes. Can only be used once every 10 minutes.
+            </p>
+            {(() => {
+              const now = Date.now();
+              const buffEndTime = sacrificeTime.getTime() + 180000;
+              const cooldownEndTime = sacrificeTime.getTime() + 600000;
+
+              if (now < buffEndTime) {
+                const timeLeft = buffEndTime - now;
+                const progress = (timeLeft / 180000) * 100;
+                return (
+                  <div className="w-full bg-stone-700 h-2 mb-2">
+                    <div
+                      className="bg-red-500 h-2 transition-all duration-100"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                );
+              } else {
+                const timeLeft = cooldownEndTime - now;
+                const progress = (timeLeft / 420000) * 100;
+                return (
+                  <div className="w-full bg-stone-700 h-2 mb-2">
+                    <div
+                      className="bg-blue-500 h-2 transition-all duration-100"
+                      style={{ width: `${Math.min(100 - progress, 100)}%` }}
+                    ></div>
+                  </div>
+                );
+              }
+            })()}
+            <button
+              onClick={() => {
+                if (woodcocks.length > 0 && worms >= 500) {
+                  setLastWormTime(Date.now());
+                  setWorms(worms - 500);
+                  setMsPerWorm(Math.floor(msPerWorm / 2));
+                  setSacrificeTime(new Date());
+                  const woodcocksToKill = Math.min(50, woodcocks.length);
+                  const shuffledWoodcocks = [...woodcocks].sort(
+                    () => Math.random() - 0.5
+                  );
+                  const remainingWoodcocks =
+                    shuffledWoodcocks.slice(woodcocksToKill);
+                  setDeadBirds((prev) => prev + woodcocksToKill);
+                  setWoodcocks(remainingWoodcocks);
+
+                  setTimeout(() => {
+                    setMsPerWorm(msPerWorm * 2);
+                  }, 180000);
+                }
+              }}
+              disabled={
+                worms < 500 ||
+                woodcocks.length === 0 ||
+                sacrificeTime.getTime() + 10 * 60 * 1000 > Date.now()
+              }
+              className={`font-bold bg-stone-700 px-2 py-1 ${
+                worms >= 500 &&
+                woodcocks.length > 0 &&
+                sacrificeTime.getTime() + 10 * 60 * 1000 <= Date.now()
+                  ? "hover:bg-stone-600"
+                  : ""
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              Activate (500 worms)
+            </button>
           </div>
         </div>
       </div>
