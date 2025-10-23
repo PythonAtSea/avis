@@ -144,27 +144,11 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-stone-950 flex flex-col p-4">
+    <div className="min-h-screen bg-stone-950 flex flex-col">
       <style>{scrollbarStyles}</style>
 
-      {(typeof window !== "undefined" &&
-        window.location.hostname === "localhost" && (
-          <button
-            className="text-5xl font-bold text-white mb-8 text-center"
-            onClick={() => {
-              setWorms((prev) => prev + 500);
-            }}
-          >
-            + 500
-          </button>
-        )) || (
-        <h1 className="text-5xl font-bold text-white mb-8 text-center">Avis</h1>
-      )}
       <div className="flex flex-1 gap-4 min-h-0">
-        <div
-          className="w-80 overflow-y-auto custom-scrollbar"
-          style={{ height: "calc(100vh - 7rem)" }}
-        >
+        <div className="w-80 overflow-y-auto custom-scrollbar h-screen p-4">
           <h2 className="text-2xl font-bold text-white mb-4 sticky top-0 bg-stone-950">
             Woodcocks
           </h2>
@@ -215,6 +199,21 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col items-center justify-center flex-1 gap-8">
+          {(typeof window !== "undefined" &&
+            window.location.hostname === "localhost" && (
+              <button
+                className="text-5xl font-bold text-white mb-8 text-center"
+                onClick={() => {
+                  setWorms((prev) => prev + 500);
+                }}
+              >
+                + 500
+              </button>
+            )) || (
+            <h1 className="text-5xl font-bold text-white mb-8 text-center">
+              Avis
+            </h1>
+          )}
           <div className="grid grid-cols-2 gap-4 w-full max-w-md">
             <div className="bg-stone-900 p-4 shadow-offset">
               <p className="text-stone-100 text-sm">
@@ -269,10 +268,7 @@ export default function Home() {
           </button>
         </div>
 
-        <div
-          className="w-80 overflow-y-auto custom-scrollbar"
-          style={{ height: "calc(100vh - 7rem)" }}
-        >
+        <div className="w-80 overflow-y-auto custom-scrollbar h-screen p-4">
           <h2 className="text-2xl font-bold text-white mb-4 top-0 bg-stone-950">
             Permanent Upgrades
           </h2>
