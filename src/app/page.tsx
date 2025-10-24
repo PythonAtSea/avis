@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const scrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
@@ -53,6 +53,29 @@ const BIRD_NAMES = [
   "Zephyr",
 ];
 
+const getOrdinal = (num: number): string => {
+  const j = num % 10;
+  const k = num % 100;
+  if (j === 1 && k !== 11) return `${num}st`;
+  if (j === 2 && k !== 12) return `${num}nd`;
+  if (j === 3 && k !== 13) return `${num}rd`;
+  return `${num}th`;
+};
+
+const getNextName = (existingWoodcocks: Woodcock[]) => {
+  const randomBaseName =
+    BIRD_NAMES[Math.floor(Math.random() * BIRD_NAMES.length)];
+  const usedCount = existingWoodcocks.filter((woodcock) =>
+    woodcock.name.startsWith(randomBaseName)
+  ).length;
+
+  if (usedCount === 0) {
+    return randomBaseName;
+  }
+
+  return `${randomBaseName} the ${getOrdinal(usedCount + 1)}`;
+};
+
 export default function Home() {
   const [woodcocks, setWoodcocks] = useState<Woodcock[]>([]);
   const [worms, setWorms] = useState<number>(0);
@@ -62,35 +85,15 @@ export default function Home() {
   const [wormSpeedUpgradeCost, setWormSpeedUpgradeCost] = useState<number>(100);
   const [growUpgradeCost, setGrowUpgradeCost] = useState<number>(80);
   const [maxLifeUpgradeCost, setMaxLifeUpgradeCost] = useState<number>(150);
-  const [deadBirds, setDeadBirds] = useState<number>(0);
   const [lastWormTime, setLastWormTime] = useState<number>(Date.now());
   const [blazeStartTime, setBlazeStartTime] = useState<Date>(new Date(0));
   const [sacrificeTime, setSacrificeTime] = useState<Date>(new Date(0));
+  const [incubatorSecondsPerHatch, setIncubatorSecondsPerHatch] =
+    useState<number>(0);
+  const [incubatorCost, setIncubatorCost] = useState<number>(500);
+  const lastIncubatorHatchTimeRef = useRef<number>(0);
 
-  const getOrdinal = (num: number): string => {
-    const j = num % 10;
-    const k = num % 100;
-    if (j === 1 && k !== 11) return `${num}st`;
-    if (j === 2 && k !== 12) return `${num}nd`;
-    if (j === 3 && k !== 13) return `${num}rd`;
-    return `${num}th`;
-  };
-
-  const getNextName = (existingWoodcocks: Woodcock[]) => {
-    const randomBaseName =
-      BIRD_NAMES[Math.floor(Math.random() * BIRD_NAMES.length)];
-    const usedCount = existingWoodcocks.filter((woodcock) =>
-      woodcock.name.startsWith(randomBaseName)
-    ).length;
-
-    if (usedCount === 0) {
-      return randomBaseName;
-    }
-
-    return `${randomBaseName} the ${getOrdinal(usedCount + 1)}`;
-  };
-
-  const hatchEgg = () => {
+  const hatchEgg = useCallback(() => {
     const newName = getNextName(woodcocks);
     const newWoodcock: Woodcock = {
       birthDate: new Date(),
@@ -98,29 +101,45 @@ export default function Home() {
       name: newName,
     };
     setWoodcocks([...woodcocks, newWoodcock]);
-  };
+  }, [woodcocks]);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log("yo");
       setWoodcocks((prevWoodcocks) => {
+        const now = Date.now();
+        const hatchIntervalMs = incubatorSecondsPerHatch * 1000;
+
         const aliveWoodcocks = prevWoodcocks.filter((woodcock) => {
-          const ageInMs = new Date().getTime() - woodcock.birthDate.getTime();
+          const ageInMs = now - woodcock.birthDate.getTime();
           return ageInMs < maxLife;
         });
-        const deadCount = prevWoodcocks.length - aliveWoodcocks.length;
-        setDeadBirds((prev) => prev + deadCount);
-        return aliveWoodcocks.map((woodcock) => {
-          const ageInMs = new Date().getTime() - woodcock.birthDate.getTime();
+
+        const maturedWoodcocks = aliveWoodcocks.map((woodcock) => {
+          const ageInMs = now - woodcock.birthDate.getTime();
           if (!woodcock.isAdult && ageInMs >= growMs) {
             return { ...woodcock, isAdult: true };
           }
           return woodcock;
         });
+
+        const nextWoodcocks = [...maturedWoodcocks];
+
+        if (
+          incubatorSecondsPerHatch > 0 &&
+          lastIncubatorHatchTimeRef.current > 0
+        ) {
+          const elapsedSinceLastHatch = now - lastIncubatorHatchTimeRef.current;
+          if (elapsedSinceLastHatch >= hatchIntervalMs) {
+            hatchEgg();
+            lastIncubatorHatchTimeRef.current = now;
+          }
+        }
+
+        return nextWoodcocks;
       });
-    }, 0);
+    }, 100);
     return () => clearInterval(interval);
-  }, [growMs, maxLife]);
+  }, [growMs, maxLife, incubatorSecondsPerHatch, hatchEgg]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -254,9 +273,6 @@ export default function Home() {
                 <span className="text-stone-100 font-bold">
                   {woodcocks.filter((b) => !b.isAdult).length}
                 </span>
-                <br />
-                <span> Dead: </span>
-                <span className="text-stone-100 font-bold">{deadBirds}</span>
               </p>
             </div>
           </div>
@@ -273,14 +289,21 @@ export default function Home() {
             Permanent Upgrades
           </h2>
           <div className="bg-stone-900 p-4 shadow-offset mb-4">
-            <p className="text-stone-100 mb-2 font-semibold">Foraging Speed</p>
-            <p className="text-stone-300 text-sm mb-1">
-              Current: {(msPerWorm / 1000).toFixed(1)}s per worm per adult bird
-            </p>
-            <p className="text-stone-300 text-sm mb-2">
-              After upgrade: {(Math.floor(msPerWorm / 1.1) / 1000).toFixed(1)}s
-              per worm per adult bird
-            </p>
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-stone-100 text-lg font-bold">Foraging Speed</p>
+            </div>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">Current</p>
+              <p className="text-stone-100 font-semibold">
+                {(msPerWorm / 1000).toFixed(1)}s per worm
+              </p>
+            </div>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">After Upgrade</p>
+              <p className="text-green-400 font-semibold">
+                {(Math.floor(msPerWorm / 1.1) / 1000).toFixed(1)}s per worm
+              </p>
+            </div>
             <button
               onClick={() => {
                 if (worms >= wormSpeedUpgradeCost) {
@@ -293,7 +316,7 @@ export default function Home() {
                 }
               }}
               disabled={worms < wormSpeedUpgradeCost}
-              className={`font-bold bg-stone-700 px-2 py-1 ${
+              className={`w-full font-bold bg-stone-700 px-2 py-2 ${
                 worms >= wormSpeedUpgradeCost ? "hover:bg-stone-600" : ""
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
@@ -301,14 +324,21 @@ export default function Home() {
             </button>
           </div>
           <div className="bg-stone-900 p-4 shadow-offset mb-4">
-            <p className="text-stone-100 mb-2 font-semibold">Growth Speed</p>
-            <p className="text-stone-300 text-sm mb-1">
-              Current: {(growMs / 1000).toFixed(1)}s to grow
-            </p>
-            <p className="text-stone-300 text-sm mb-2">
-              After upgrade: {(Math.floor(growMs / 1.3) / 1000).toFixed(1)}s to
-              grow
-            </p>
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-stone-100 text-lg font-bold">Growth Speed</p>
+            </div>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">Current</p>
+              <p className="text-stone-100 font-semibold">
+                {(growMs / 1000).toFixed(1)}s to grow
+              </p>
+            </div>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">After Upgrade</p>
+              <p className="text-green-400 font-semibold">
+                {(Math.floor(growMs / 1.3) / 1000).toFixed(1)}s to grow
+              </p>
+            </div>
             <button
               onClick={() => {
                 if (worms >= growUpgradeCost) {
@@ -318,25 +348,32 @@ export default function Home() {
                 }
               }}
               disabled={worms < growUpgradeCost}
-              className={`font-bold bg-stone-700 px-2 py-1 ${
+              className={`w-full font-bold bg-stone-700 px-2 py-2 ${
                 worms >= growUpgradeCost ? "hover:bg-stone-600" : ""
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Buy ({growUpgradeCost} worms)
             </button>
           </div>
-          <div className="bg-stone-900 p-4 shadow-offset">
-            <p className="text-stone-100 mb-2 font-semibold">
-              Bird Life Length
-            </p>
-            <p className="text-stone-300 text-sm mb-1">
-              Current: {((maxLife - growMs) / 1000).toFixed(0)}s life length
-            </p>
-            <p className="text-stone-300 text-sm mb-2">
-              After upgrade:{" "}
-              {(Math.floor((maxLife - growMs) * 1.2) / 1000).toFixed(0)}s life
-              length
-            </p>
+          <div className="bg-stone-900 p-4 shadow-offset mb-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-stone-100 text-lg font-bold">
+                Bird Life Length
+              </p>
+            </div>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">Current</p>
+              <p className="text-stone-100 font-semibold">
+                {((maxLife - growMs) / 1000).toFixed(0)}s life length
+              </p>
+            </div>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">After Upgrade</p>
+              <p className="text-green-400 font-semibold">
+                {(Math.floor((maxLife - growMs) * 1.2) / 1000).toFixed(0)}s life
+                length
+              </p>
+            </div>
             <button
               onClick={() => {
                 if (worms >= maxLifeUpgradeCost) {
@@ -346,27 +383,90 @@ export default function Home() {
                 }
               }}
               disabled={worms < maxLifeUpgradeCost}
-              className={`font-bold bg-stone-700 px-2 py-1 ${
+              className={`w-full font-bold bg-stone-700 px-2 py-2 ${
                 worms >= maxLifeUpgradeCost ? "hover:bg-stone-600" : ""
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Buy ({maxLifeUpgradeCost} worms)
             </button>
           </div>
+          <div className="bg-stone-900 p-4 shadow-offset">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-stone-100 text-lg font-bold">Incubator</p>
+            </div>
+            <p className="text-stone-300 text-sm mb-3">
+              Automatically hatch a new egg at a set interval.
+            </p>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">Current</p>
+              <p className="text-stone-100 font-semibold">
+                {incubatorSecondsPerHatch > 0
+                  ? `${incubatorSecondsPerHatch}s per hatch`
+                  : "Inactive"}
+              </p>
+            </div>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">After Upgrade</p>
+              <p className="text-green-400 font-semibold">
+                {incubatorSecondsPerHatch > 0
+                  ? `${
+                      incubatorSecondsPerHatch <= 5
+                        ? incubatorSecondsPerHatch * 0.8
+                        : Math.max(5, incubatorSecondsPerHatch - 5)
+                    }s per hatch`
+                  : "30s per hatch"}
+              </p>
+            </div>
+            {incubatorSecondsPerHatch > 0 && (
+              <div className="w-full bg-stone-700 h-2 mb-3">
+                <div
+                  className="bg-blue-500 h-2"
+                  style={{
+                    width: `${Math.min(
+                      ((Date.now() - lastIncubatorHatchTimeRef.current) /
+                        (incubatorSecondsPerHatch * 1000)) *
+                        100,
+                      100
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+            )}
+            <button
+              disabled={worms < incubatorCost}
+              className={`w-full font-bold bg-stone-700 px-2 py-2 ${
+                worms >= incubatorCost ? "hover:bg-stone-600" : ""
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              onClick={() => {
+                if (worms >= incubatorCost) {
+                  setWorms(worms - incubatorCost);
+                  const newInterval =
+                    incubatorSecondsPerHatch > 0
+                      ? incubatorSecondsPerHatch <= 5
+                        ? incubatorSecondsPerHatch * 0.8
+                        : Math.max(5, incubatorSecondsPerHatch - 5)
+                      : 30;
+                  setIncubatorSecondsPerHatch(newInterval);
+                  setIncubatorCost(Math.floor(incubatorCost * 1.5));
+                  if (incubatorSecondsPerHatch === 0) {
+                    lastIncubatorHatchTimeRef.current = Date.now();
+                  }
+                }
+              }}
+            >
+              Buy ({incubatorCost} worms)
+            </button>
+          </div>
           <h2 className="text-2xl font-bold text-white mb-4 mt-8">
             Temporary Buffs
           </h2>
-          <div
-            className={`${
-              blazeStartTime.getTime() + 30000 > Date.now()
-                ? "bg-amber-600 animate-pulse"
-                : "bg-stone-900"
-            } p-4 shadow-offset mb-4 relative`}
-          >
-            <p className="text-stone-100 mb-2 font-semibold">Blaze of glory</p>
-            <p className="text-stone-300 text-sm mb-1">
-              Triples foraging speed for 30 seconds, and then kills your entire
-              fall of woodcocks (can only be used once every 2 minutes).
+          <div className={`bg-stone-900 p-4 shadow-offset mb-4 relative`}>
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-stone-100 text-lg font-bold">Blaze of Glory</p>
+            </div>
+            <p className="text-stone-300 text-xs mb-3">
+              Triples foraging speed for 30s, then kills all woodcocks.
+              (Cooldown: 2 minutes)
             </p>
             {(() => {
               const now = Date.now();
@@ -379,7 +479,7 @@ export default function Home() {
                 return (
                   <div className="w-full bg-stone-700 h-2 mb-2">
                     <div
-                      className="bg-red-500 h-2 transition-all duration-100"
+                      className="bg-red-500 h-2 transition-all duration-100 animate-pulse"
                       style={{ width: `${progress}%` }}
                     ></div>
                   </div>
@@ -396,7 +496,6 @@ export default function Home() {
                   </div>
                 );
               }
-              return null;
             })()}
             <button
               onClick={() => {
@@ -406,7 +505,6 @@ export default function Home() {
                   setMsPerWorm(Math.floor(msPerWorm / 3));
                   setBlazeStartTime(new Date());
                   setTimeout(() => {
-                    setDeadBirds((prev) => prev + woodcocks.length);
                     setWoodcocks([]);
                   }, 30000);
                   setTimeout(() => {
@@ -419,7 +517,7 @@ export default function Home() {
                 woodcocks.length === 0 ||
                 blazeStartTime.getTime() + 120000 > Date.now()
               }
-              className={`font-bold bg-stone-700 px-2 py-1 ${
+              className={`w-full font-bold bg-stone-700 px-2 py-2 ${
                 worms >= 500 &&
                 woodcocks.length > 0 &&
                 blazeStartTime.getTime() + 120000 <= Date.now()
@@ -431,10 +529,12 @@ export default function Home() {
             </button>
           </div>
           <div className={`p-4 shadow-offset mb-4 relative bg-stone-900`}>
-            <p className="text-stone-100 mb-2 font-semibold">Sacrifice</p>
-            <p>
-              Kill 50 random woodcocks to get a 100% foraging speed boost for 3
-              minutes. Can only be used once every 10 minutes.
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-stone-100 text-lg font-bold">Sacrifice</p>
+            </div>
+            <p className="text-stone-300 text-xs mb-3">
+              Kill 50 random woodcocks for 2x foraging speed for 3 minutes.
+              (Cooldown: 10 minutes)
             </p>
             {(() => {
               const now = Date.now();
@@ -447,7 +547,7 @@ export default function Home() {
                 return (
                   <div className="w-full bg-stone-700 h-2 mb-2">
                     <div
-                      className="bg-red-500 h-2 transition-all duration-100"
+                      className="bg-red-500 h-2 transition-all duration-100 animate-pulse"
                       style={{ width: `${progress}%` }}
                     ></div>
                   </div>
@@ -478,7 +578,6 @@ export default function Home() {
                   );
                   const remainingWoodcocks =
                     shuffledWoodcocks.slice(woodcocksToKill);
-                  setDeadBirds((prev) => prev + woodcocksToKill);
                   setWoodcocks(remainingWoodcocks);
 
                   setTimeout(() => {
@@ -491,7 +590,7 @@ export default function Home() {
                 woodcocks.length === 0 ||
                 sacrificeTime.getTime() + 10 * 60 * 1000 > Date.now()
               }
-              className={`font-bold bg-stone-700 px-2 py-1 ${
+              className={`w-full font-bold bg-stone-700 px-2 py-2 ${
                 worms >= 500 &&
                 woodcocks.length > 0 &&
                 sacrificeTime.getTime() + 10 * 60 * 1000 <= Date.now()
