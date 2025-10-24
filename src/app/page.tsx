@@ -168,7 +168,7 @@ export default function Home() {
 
       <div className="flex flex-1 gap-4 min-h-0">
         <div className="w-80 overflow-y-auto custom-scrollbar h-screen p-4">
-          <h2 className="text-2xl font-bold text-white mb-4 sticky top-0 bg-stone-950">
+          <h2 className="text-2xl font-bold text-white mb-4 top-0 bg-stone-950">
             Woodcocks
           </h2>
           {woodcocks
