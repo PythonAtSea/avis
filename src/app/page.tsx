@@ -2,6 +2,52 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const STORAGE_KEY = "avis_game_state";
+
+interface SerializedWoodcock {
+  birthDate: string;
+  isAdult: boolean;
+  name: string;
+}
+
+interface GameState {
+  woodcocks: SerializedWoodcock[];
+  worms: number;
+  msPerWorm: number;
+  growMs: number;
+  maxLife: number;
+  wormSpeedUpgradeCost: number;
+  growUpgradeCost: number;
+  maxLifeUpgradeCost: number;
+  lastWormTime: number;
+  blazeStartTime: string;
+  sacrificeTime: string;
+  incubatorSecondsPerHatch: number;
+  incubatorCost: number;
+  instantGrowthChance: number;
+  instantGrowthCost: number;
+  immortalityChance: number;
+  immortalityCost: number;
+}
+
+const saveToLocalStorage = (state: GameState) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (error) {
+    console.error("Failed to save game state to localStorage:", error);
+  }
+};
+
+const loadFromLocalStorage = (): GameState | null => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch (error) {
+    console.error("Failed to load game state from localStorage:", error);
+    return null;
+  }
+};
+
 const scrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
@@ -77,25 +123,57 @@ const getNextName = (existingWoodcocks: Woodcock[]) => {
 };
 
 export default function Home() {
-  const [woodcocks, setWoodcocks] = useState<Woodcock[]>([]);
-  const [worms, setWorms] = useState<number>(0);
-  const [msPerWorm, setMsPerWorm] = useState<number>(10000);
-  const [growMs, setGrowMs] = useState<number>(10000);
-  const [maxLife, setMaxLife] = useState<number>(70000);
-  const [wormSpeedUpgradeCost, setWormSpeedUpgradeCost] = useState<number>(100);
-  const [growUpgradeCost, setGrowUpgradeCost] = useState<number>(80);
-  const [maxLifeUpgradeCost, setMaxLifeUpgradeCost] = useState<number>(150);
-  const [lastWormTime, setLastWormTime] = useState<number>(Date.now());
-  const [blazeStartTime, setBlazeStartTime] = useState<Date>(new Date(0));
-  const [sacrificeTime, setSacrificeTime] = useState<Date>(new Date(0));
+  const savedState =
+    typeof window !== "undefined" ? loadFromLocalStorage() : null;
+
+  const [woodcocks, setWoodcocks] = useState<Woodcock[]>(
+    savedState?.woodcocks.map((w) => ({
+      ...w,
+      birthDate: new Date(w.birthDate),
+    })) || []
+  );
+  const [worms, setWorms] = useState<number>(savedState?.worms ?? 0);
+  const [msPerWorm, setMsPerWorm] = useState<number>(
+    savedState?.msPerWorm ?? 10000
+  );
+  const [growMs, setGrowMs] = useState<number>(savedState?.growMs ?? 10000);
+  const [maxLife, setMaxLife] = useState<number>(savedState?.maxLife ?? 70000);
+  const [wormSpeedUpgradeCost, setWormSpeedUpgradeCost] = useState<number>(
+    savedState?.wormSpeedUpgradeCost ?? 100
+  );
+  const [growUpgradeCost, setGrowUpgradeCost] = useState<number>(
+    savedState?.growUpgradeCost ?? 80
+  );
+  const [maxLifeUpgradeCost, setMaxLifeUpgradeCost] = useState<number>(
+    savedState?.maxLifeUpgradeCost ?? 150
+  );
+  const [lastWormTime, setLastWormTime] = useState<number>(
+    savedState?.lastWormTime ?? Date.now()
+  );
+  const [blazeStartTime, setBlazeStartTime] = useState<Date>(
+    savedState ? new Date(savedState.blazeStartTime) : new Date(0)
+  );
+  const [sacrificeTime, setSacrificeTime] = useState<Date>(
+    savedState ? new Date(savedState.sacrificeTime) : new Date(0)
+  );
   const [incubatorSecondsPerHatch, setIncubatorSecondsPerHatch] =
-    useState<number>(0);
-  const [incubatorCost, setIncubatorCost] = useState<number>(500);
+    useState<number>(savedState?.incubatorSecondsPerHatch ?? 0);
+  const [incubatorCost, setIncubatorCost] = useState<number>(
+    savedState?.incubatorCost ?? 500
+  );
   const lastIncubatorHatchTimeRef = useRef<number>(0);
-  const [instantGrowthChance, setInstantGrowthChance] = useState<number>(0);
-  const [instantGrowthCost, setInstantGrowthCost] = useState<number>(700);
-  const [immortalityChance, setImmortalityChance] = useState<number>(0);
-  const [immortalityCost, setImmortalityCost] = useState<number>(1200);
+  const [instantGrowthChance, setInstantGrowthChance] = useState<number>(
+    savedState?.instantGrowthChance ?? 0
+  );
+  const [instantGrowthCost, setInstantGrowthCost] = useState<number>(
+    savedState?.instantGrowthCost ?? 700
+  );
+  const [immortalityChance, setImmortalityChance] = useState<number>(
+    savedState?.immortalityChance ?? 0
+  );
+  const [immortalityCost, setImmortalityCost] = useState<number>(
+    savedState?.immortalityCost ?? 1200
+  );
 
   const hatchEgg = useCallback(() => {
     const newName = getNextName(woodcocks);
@@ -115,6 +193,51 @@ export default function Home() {
     };
     setWoodcocks([...woodcocks, newWoodcock]);
   }, [growMs, instantGrowthChance, woodcocks]);
+
+  useEffect(() => {
+    const gameState: GameState = {
+      woodcocks: woodcocks.map((w) => ({
+        birthDate: w.birthDate.toISOString(),
+        isAdult: w.isAdult,
+        name: w.name,
+      })),
+      worms,
+      msPerWorm,
+      growMs,
+      maxLife,
+      wormSpeedUpgradeCost,
+      growUpgradeCost,
+      maxLifeUpgradeCost,
+      lastWormTime,
+      blazeStartTime: blazeStartTime.toISOString(),
+      sacrificeTime: sacrificeTime.toISOString(),
+      incubatorSecondsPerHatch,
+      incubatorCost,
+      instantGrowthChance,
+      instantGrowthCost,
+      immortalityChance,
+      immortalityCost,
+    };
+    saveToLocalStorage(gameState);
+  }, [
+    woodcocks,
+    worms,
+    msPerWorm,
+    growMs,
+    maxLife,
+    wormSpeedUpgradeCost,
+    growUpgradeCost,
+    maxLifeUpgradeCost,
+    lastWormTime,
+    blazeStartTime,
+    sacrificeTime,
+    incubatorSecondsPerHatch,
+    incubatorCost,
+    instantGrowthChance,
+    instantGrowthCost,
+    immortalityChance,
+    immortalityCost,
+  ]);
 
   useEffect(() => {
     const interval = setInterval(() => {
