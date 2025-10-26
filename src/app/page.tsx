@@ -94,6 +94,8 @@ export default function Home() {
   const lastIncubatorHatchTimeRef = useRef<number>(0);
   const [instantGrowthChance, setInstantGrowthChance] = useState<number>(0);
   const [instantGrowthCost, setInstantGrowthCost] = useState<number>(700);
+  const [immortalityChance, setImmortalityChance] = useState<number>(0);
+  const [immortalityCost, setImmortalityCost] = useState<number>(1200);
 
   const hatchEgg = useCallback(() => {
     const newName = getNextName(woodcocks);
@@ -120,10 +122,21 @@ export default function Home() {
         const now = Date.now();
         const hatchIntervalMs = incubatorSecondsPerHatch * 1000;
 
-        const aliveWoodcocks = prevWoodcocks.filter((woodcock) => {
-          const ageInMs = now - woodcock.birthDate.getTime();
-          return ageInMs < maxLife;
-        });
+        const aliveWoodcocks = prevWoodcocks
+          .map((woodcock) => {
+            const ageInMs = now - woodcock.birthDate.getTime();
+            if (ageInMs >= maxLife && woodcock.isAdult) {
+              if (Math.random() * 100 < immortalityChance) {
+                return {
+                  ...woodcock,
+                  birthDate: new Date(now - growMs - 1000),
+                };
+              }
+              return null;
+            }
+            return woodcock;
+          })
+          .filter((woodcock): woodcock is Woodcock => woodcock !== null);
 
         const maturedWoodcocks = aliveWoodcocks.map((woodcock) => {
           const ageInMs = now - woodcock.birthDate.getTime();
@@ -150,7 +163,7 @@ export default function Home() {
       });
     }, 100);
     return () => clearInterval(interval);
-  }, [growMs, maxLife, incubatorSecondsPerHatch, hatchEgg]);
+  }, [growMs, maxLife, incubatorSecondsPerHatch, hatchEgg, immortalityChance]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -468,7 +481,7 @@ export default function Home() {
               Buy ({incubatorCost} worms)
             </button>
           </div>
-          <div className="bg-stone-900 p-4 shadow-offset">
+          <div className="bg-stone-900 p-4 shadow-offset mb-4">
             <div className="flex justify-between items-start mb-3">
               <p className="text-stone-100 text-lg font-bold">Instant Growth</p>
             </div>
@@ -501,11 +514,57 @@ export default function Home() {
                       setInstantGrowthChance(
                         Math.min(instantGrowthChance + 5, 100)
                       );
-                      setInstantGrowthCost(Math.floor(instantGrowthCost * 1.5));
+                      setInstantGrowthCost(Math.floor(instantGrowthCost * 1.3));
                     }
                   }}
                 >
                   Buy ({instantGrowthCost} worms)
+                </button>
+              </>
+            ) : (
+              <div className="bg-green-900 p-2 mb-3">
+                <p className="text-green-400 font-semibold text-center">
+                  MAX LEVEL
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="bg-stone-900 p-4 shadow-offset mb-4">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-stone-100 text-lg font-bold">Immortality</p>
+            </div>
+            <p>
+              Chance to reset the age of a Woodcock when it&apos;s supposed to
+              die.
+            </p>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">Current</p>
+              <p className="text-stone-100 font-semibold">
+                {immortalityChance}% chance
+              </p>
+            </div>
+            {immortalityChance < 80 ? (
+              <>
+                <div className="bg-stone-800 p-2 mb-3">
+                  <p className="text-stone-300 text-xs mb-1">After Upgrade</p>
+                  <p className="text-green-400 font-semibold">
+                    {Math.min(immortalityChance + 5, 80)}% chance
+                  </p>
+                </div>
+                <button
+                  disabled={worms < immortalityCost}
+                  className={`w-full font-bold bg-stone-700 px-2 py-2 ${
+                    worms >= immortalityCost ? "hover:bg-stone-600" : ""
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  onClick={() => {
+                    if (worms >= immortalityCost) {
+                      setWorms(worms - immortalityCost);
+                      setImmortalityChance(Math.min(immortalityChance + 5, 80));
+                      setImmortalityCost(Math.floor(immortalityCost * 1.5));
+                    }
+                  }}
+                >
+                  Buy ({immortalityCost} worms)
                 </button>
               </>
             ) : (
