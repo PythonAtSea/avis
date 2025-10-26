@@ -174,6 +174,7 @@ export default function Home() {
   const [immortalityCost, setImmortalityCost] = useState<number>(
     savedState?.immortalityCost ?? 1200
   );
+  const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const hatchEgg = useCallback(() => {
     const newName = getNextName(woodcocks);
@@ -315,9 +316,18 @@ export default function Home() {
 
       <div className="flex flex-1 gap-4 min-h-0">
         <div className="w-80 overflow-y-auto custom-scrollbar h-screen p-4">
-          <h2 className="text-2xl font-bold text-white mb-4 top-0 bg-stone-950">
-            Woodcocks
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-white top-0 bg-stone-950">
+              Woodcocks
+            </h2>
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2 bg-stone-900 hover:bg-stone-800 text-white"
+              title="Settings"
+            >
+              Settings
+            </button>
+          </div>
           {woodcocks
             .sort((a, b) => b.birthDate.getTime() - a.birthDate.getTime())
             .map((woodcock, index) => (
@@ -868,6 +878,62 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {showSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-stone-900\ p-6 w-96 max-h-96 overflow-y-auto custom-scrollbar shadow-offset-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-white">Settings</h2>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="text-white text-2xl hover:text-stone-300"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-stone-800 p-4">
+                <h3 className="text-lg font-bold text-white mb-2">Save Data</h3>
+                <button
+                  className="w-full font-bold bg-red-600 px-2 py-2 hover:bg-red-800 text-white"
+                  onClick={() => {
+                    localStorage.removeItem(STORAGE_KEY);
+                    setWoodcocks([]);
+                    setWorms(0);
+                    setMsPerWorm(10000);
+                    setGrowMs(10000);
+                    setMaxLife(70000);
+                    setWormSpeedUpgradeCost(100);
+                    setGrowUpgradeCost(80);
+                    setMaxLifeUpgradeCost(150);
+                    setLastWormTime(Date.now());
+                    setBlazeStartTime(new Date(0));
+                    setSacrificeTime(new Date(0));
+                    setIncubatorSecondsPerHatch(0);
+                    setIncubatorCost(500);
+                    lastIncubatorHatchTimeRef.current = 0;
+                    setInstantGrowthChance(0);
+                    setInstantGrowthCost(700);
+                    setImmortalityChance(0);
+                    setImmortalityCost(1200);
+                    setShowSettings(false);
+                  }}
+                >
+                  Clear save data
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowSettings(false)}
+              className="w-full bg-stone-700 hover:bg-stone-600 text-white font-bold px-4 py-2 mt-4"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
