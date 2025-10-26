@@ -646,7 +646,7 @@ export default function Home() {
               Activate (500 worms)
             </button>
           </div>
-          <div className={`p-4 shadow-offset mb-4 relative bg-stone-900`}>
+          <div className="p-4 shadow-offset mb-4 relative bg-stone-900">
             <div className="flex justify-between items-start mb-2">
               <p className="text-stone-100 text-lg font-bold">Sacrifice</p>
             </div>
@@ -717,6 +717,30 @@ export default function Home() {
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Activate (500 worms)
+            </button>
+          </div>
+          <div className="p-4 shadow-offset mb-4 relative bg-stone-900">
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-stone-100 text-lg font-bold">Pesticides</p>
+            </div>
+            <p className="text-stone-300 text-xs mb-3">
+              50% chance to double all worms, but 50% chance to kill all
+              woodcocks. Needs at least 20 woodcocks to gamble.
+            </p>
+            <button
+              disabled={woodcocks.length < 20}
+              className={`w-full font-bold bg-stone-700 px-2 py-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              onClick={() => {
+                if (woodcocks.length >= 20) {
+                  if (Math.random() < 0.5) {
+                    setWorms(worms * 2);
+                  } else {
+                    setWoodcocks([]);
+                  }
+                }
+              }}
+            >
+              Gamble!
             </button>
           </div>
         </div>
