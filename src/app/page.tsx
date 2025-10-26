@@ -92,16 +92,27 @@ export default function Home() {
     useState<number>(0);
   const [incubatorCost, setIncubatorCost] = useState<number>(500);
   const lastIncubatorHatchTimeRef = useRef<number>(0);
+  const [instantGrowthChance, setInstantGrowthChance] = useState<number>(0);
+  const [instantGrowthCost, setInstantGrowthCost] = useState<number>(700);
 
   const hatchEgg = useCallback(() => {
     const newName = getNextName(woodcocks);
+    if (Math.random() * 100 < instantGrowthChance) {
+      const newWoodcock: Woodcock = {
+        birthDate: new Date(Date.now() - growMs - 1000),
+        isAdult: true,
+        name: newName,
+      };
+      setWoodcocks([...woodcocks, newWoodcock]);
+      return;
+    }
     const newWoodcock: Woodcock = {
       birthDate: new Date(),
       isAdult: false,
       name: newName,
     };
     setWoodcocks([...woodcocks, newWoodcock]);
-  }, [woodcocks]);
+  }, [growMs, instantGrowthChance, woodcocks]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -223,10 +234,10 @@ export default function Home() {
               <button
                 className="text-5xl font-bold text-white mb-8 text-center"
                 onClick={() => {
-                  setWorms((prev) => prev + 500);
+                  setWorms((prev) => prev + 5000000);
                 }}
               >
-                + 500
+                + 5000000 (dev)
               </button>
             )) || (
             <h1 className="text-5xl font-bold text-white mb-8 text-center">
@@ -390,7 +401,7 @@ export default function Home() {
               Buy ({maxLifeUpgradeCost} worms)
             </button>
           </div>
-          <div className="bg-stone-900 p-4 shadow-offset">
+          <div className="bg-stone-900 p-4 shadow-offset mb-4">
             <div className="flex justify-between items-start mb-3">
               <p className="text-stone-100 text-lg font-bold">Incubator</p>
             </div>
@@ -456,6 +467,54 @@ export default function Home() {
             >
               Buy ({incubatorCost} worms)
             </button>
+          </div>
+          <div className="bg-stone-900 p-4 shadow-offset">
+            <div className="flex justify-between items-start mb-3">
+              <p className="text-stone-100 text-lg font-bold">Instant Growth</p>
+            </div>
+            <p className="text-stone-300 text-sm mb-3">
+              Has a chance of instantly maturing a chick into an adult when
+              hatched.
+            </p>
+            <div className="bg-stone-800 p-2 mb-3">
+              <p className="text-stone-300 text-xs mb-1">Current</p>
+              <p className="text-stone-100 font-semibold">
+                {instantGrowthChance}% chance
+              </p>
+            </div>
+            {instantGrowthChance < 100 ? (
+              <>
+                <div className="bg-stone-800 p-2 mb-3">
+                  <p className="text-stone-300 text-xs mb-1">After Upgrade</p>
+                  <p className="text-green-400 font-semibold">
+                    {Math.min(instantGrowthChance + 5, 100)}% chance
+                  </p>
+                </div>
+                <button
+                  disabled={worms < instantGrowthCost}
+                  className={`w-full font-bold bg-stone-700 px-2 py-2 ${
+                    worms >= instantGrowthCost ? "hover:bg-stone-600" : ""
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  onClick={() => {
+                    if (worms >= instantGrowthCost) {
+                      setWorms(worms - instantGrowthCost);
+                      setInstantGrowthChance(
+                        Math.min(instantGrowthChance + 5, 100)
+                      );
+                      setInstantGrowthCost(Math.floor(instantGrowthCost * 1.5));
+                    }
+                  }}
+                >
+                  Buy ({instantGrowthCost} worms)
+                </button>
+              </>
+            ) : (
+              <div className="bg-green-900 p-2 mb-3">
+                <p className="text-green-400 font-semibold text-center">
+                  MAX LEVEL
+                </p>
+              </div>
+            )}
           </div>
           <h2 className="text-2xl font-bold text-white mb-4 mt-8">
             Temporary Buffs
