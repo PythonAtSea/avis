@@ -28,7 +28,7 @@ interface GameState {
   instantGrowthCost: number;
   immortalityChance: number;
   immortalityCost: number;
-  birdNames: string[];
+  woodcockNames: string[];
 }
 
 const saveToLocalStorage = (state: GameState) => {
@@ -135,9 +135,12 @@ const getOrdinal = (num: number): string => {
   return `${num}th`;
 };
 
-const getNextName = (existingWoodcocks: Woodcock[], birdNames: string[]) => {
+const getNextName = (
+  existingWoodcocks: Woodcock[],
+  woodcockNames: string[]
+) => {
   const randomBaseName =
-    birdNames[Math.floor(Math.random() * birdNames.length)];
+    woodcockNames[Math.floor(Math.random() * woodcockNames.length)];
   const usedCount = existingWoodcocks.filter((woodcock) =>
     woodcock.name.startsWith(randomBaseName)
   ).length;
@@ -202,13 +205,13 @@ export default function Home() {
     savedState?.immortalityCost ?? 1200
   );
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [birdNames, setBirdNames] = useState<string[]>(
-    savedState?.birdNames ?? DEFAULT_BIRD_NAMES
+  const [woodcockNames, setWoodcockNames] = useState<string[]>(
+    savedState?.woodcockNames ?? DEFAULT_BIRD_NAMES
   );
   const [isDev, setIsDev] = useState<boolean>(false);
 
   const hatchEgg = useCallback(() => {
-    const newName = getNextName(woodcocks, birdNames);
+    const newName = getNextName(woodcocks, woodcockNames);
     if (Math.random() * 100 < instantGrowthChance) {
       const newWoodcock: Woodcock = {
         birthDate: new Date(Date.now() - growMs - 1000),
@@ -224,7 +227,7 @@ export default function Home() {
       name: newName,
     };
     setWoodcocks([...woodcocks, newWoodcock]);
-  }, [growMs, instantGrowthChance, woodcocks, birdNames]);
+  }, [growMs, instantGrowthChance, woodcocks, woodcockNames]);
 
   useEffect(() => {
     const gameState: GameState = {
@@ -249,7 +252,7 @@ export default function Home() {
       instantGrowthCost,
       immortalityChance,
       immortalityCost,
-      birdNames,
+      woodcockNames,
     };
     saveToLocalStorage(gameState);
   }, [
@@ -270,7 +273,7 @@ export default function Home() {
     instantGrowthCost,
     immortalityChance,
     immortalityCost,
-    birdNames,
+    woodcockNames,
   ]);
 
   useEffect(() => {
@@ -549,7 +552,7 @@ export default function Home() {
           <div className="bg-stone-900 p-4 shadow-offset mb-4">
             <div className="flex justify-between items-start mb-3">
               <p className="text-stone-100 text-lg font-bold">
-                Bird Life Length
+                Woodcock Life Length
               </p>
             </div>
             <div className="bg-stone-800 p-2 mb-3">
@@ -954,7 +957,7 @@ export default function Home() {
                     setInstantGrowthCost(700);
                     setImmortalityChance(0);
                     setImmortalityCost(1200);
-                    setBirdNames(DEFAULT_BIRD_NAMES);
+                    setWoodcockNames(DEFAULT_BIRD_NAMES);
                     setShowSettings(false);
                   }}
                 >
@@ -963,26 +966,26 @@ export default function Home() {
               </div>
               <div className="bg-stone-800 p-4">
                 <h3 className="text-lg font-bold text-white mb-2">
-                  Bird Names
+                  Woodcock Names
                 </h3>
-                {birdNames.map((name, index) => (
+                {woodcockNames.map((name, index) => (
                   <div key={index} className="flex items-center mb-2">
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => {
-                        const newNames = [...birdNames];
+                        const newNames = [...woodcockNames];
                         newNames[index] = e.target.value;
-                        setBirdNames(newNames);
+                        setWoodcockNames(newNames);
                       }}
                       className="flex-1 p-2 bg-stone-700 text-white"
                     />
                     <button
                       onClick={() => {
-                        const newNames = birdNames.filter(
+                        const newNames = woodcockNames.filter(
                           (_, i) => i !== index
                         );
-                        setBirdNames(newNames);
+                        setWoodcockNames(newNames);
                       }}
                       className="ml-2 text-red-500 hover:text-red-700"
                     >
@@ -992,8 +995,8 @@ export default function Home() {
                 ))}
                 <button
                   onClick={() => {
-                    setBirdNames([
-                      ...birdNames,
+                    setWoodcockNames([
+                      ...woodcockNames,
                       `to reward your curiosity, here's 10,000 worms!`,
                     ]);
                     setWorms(worms + 10000);
