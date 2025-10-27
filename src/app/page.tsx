@@ -72,31 +72,57 @@ type Woodcock = {
 };
 
 const DEFAULT_BIRD_NAMES = [
+  "Aurora",
   "Archimedes",
   "Beatrice",
+  "Blaze",
   "Cedar",
+  "Celeste",
   "Delilah",
+  "Draco",
+  "Echo",
   "Ember",
   "Falcon",
+  "Finn",
+  "Gaia",
   "Gideon",
   "Harper",
+  "Helix",
+  "Indigo",
   "Iris",
   "Jasper",
+  "Juno",
   "Kestrel",
+  "Kira",
+  "Leo",
   "Luna",
   "Maverick",
+  "Mira",
+  "Nero",
   "Nova",
   "Oliver",
+  "Opal",
+  "Pax",
   "Phoenix",
+  "Quill",
   "Quinn",
   "Raven",
+  "Rex",
+  "Sable",
   "Sage",
+  "Talon",
   "Theron",
+  "Uma",
   "Ulysses",
+  "Vega",
   "Vesper",
   "Willow",
+  "Wren",
+  "Xander",
   "Xavier",
+  "Yara",
   "Yarrow",
+  "Zane",
   "Zephyr",
 ];
 
@@ -356,7 +382,8 @@ export default function Home() {
                   const ageInMs =
                     new Date().getTime() - woodcock.birthDate.getTime();
                   const progress = woodcock.isAdult
-                    ? Math.min(
+                    ? 100 -
+                      Math.min(
                         ((ageInMs - growMs) / (maxLife - growMs)) * 100,
                         100
                       )
@@ -870,7 +897,9 @@ export default function Home() {
             </p>
             <button
               disabled={woodcocks.length < 20}
-              className={`w-full font-bold bg-stone-700 px-2 py-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`w-full font-bold bg-stone-700 px-2 py-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                woodcocks.length >= 20 ? "hover:bg-stone-600" : ""
+              }`}
               onClick={() => {
                 if (woodcocks.length >= 20) {
                   if (Math.random() < 0.5) {
