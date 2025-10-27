@@ -313,11 +313,6 @@ export default function Home() {
   }, [msPerWorm]);
 
   useEffect(() => {
-    const interval = setInterval(() => {}, 0);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     setIsDev(
       typeof window !== "undefined" && window.location.hostname === "localhost"
     );
@@ -446,7 +441,7 @@ export default function Home() {
             </div>
           </div>
           <button
-            className="w-32 h-32 -full bg-stone-200 shadow-offset hover:bg-stone-400 flex items-center justify-center"
+            className="w-32 h-32 bg-stone-200 shadow-offset hover:bg-stone-400 flex items-center justify-center"
             onClick={hatchEgg}
           >
             <span className="text-2xl text-stone-800">Hatch a egg!</span>
@@ -547,7 +542,7 @@ export default function Home() {
               onClick={() => {
                 if (worms >= maxLifeUpgradeCost) {
                   setWorms(worms - maxLifeUpgradeCost);
-                  setMaxLife(Math.floor((maxLife - growMs) * 1.2));
+                  setMaxLife(Math.floor(growMs + (maxLife - growMs) * 1.2));
                   setMaxLifeUpgradeCost(Math.floor(maxLifeUpgradeCost * 1.2));
                 }
               }}
@@ -570,7 +565,7 @@ export default function Home() {
               <p className="text-stone-300 text-xs mb-1">Current</p>
               <p className="text-stone-100 font-semibold">
                 {incubatorSecondsPerHatch > 0
-                  ? `${incubatorSecondsPerHatch}s per hatch`
+                  ? `${incubatorSecondsPerHatch.toFixed(1)}s per hatch`
                   : "Inactive"}
               </p>
             </div>
@@ -580,8 +575,8 @@ export default function Home() {
                 {incubatorSecondsPerHatch > 0
                   ? `${
                       incubatorSecondsPerHatch <= 5
-                        ? incubatorSecondsPerHatch * 0.8
-                        : Math.max(5, incubatorSecondsPerHatch - 5)
+                        ? (incubatorSecondsPerHatch * 0.8).toFixed(1)
+                        : Math.max(5, incubatorSecondsPerHatch - 5).toFixed(1)
                     }s per hatch`
                   : "30s per hatch"}
               </p>
@@ -763,15 +758,16 @@ export default function Home() {
             <button
               onClick={() => {
                 if (woodcocks.length > 0 && worms >= 500) {
+                  const originalMsPerWorm = msPerWorm;
                   setLastWormTime(Date.now());
                   setWorms(worms - 500);
-                  setMsPerWorm(Math.floor(msPerWorm / 3));
+                  setMsPerWorm(Math.floor(originalMsPerWorm / 3));
                   setBlazeStartTime(new Date());
                   setTimeout(() => {
                     setWoodcocks([]);
                   }, 30000);
                   setTimeout(() => {
-                    setMsPerWorm(msPerWorm * 3);
+                    setMsPerWorm(originalMsPerWorm);
                   }, 30000);
                 }
               }}
@@ -831,9 +827,10 @@ export default function Home() {
             <button
               onClick={() => {
                 if (woodcocks.length > 0 && worms >= 500) {
+                  const originalMsPerWorm = msPerWorm;
                   setLastWormTime(Date.now());
                   setWorms(worms - 500);
-                  setMsPerWorm(Math.floor(msPerWorm / 2));
+                  setMsPerWorm(Math.floor(originalMsPerWorm / 2));
                   setSacrificeTime(new Date());
                   const woodcocksToKill = Math.min(50, woodcocks.length);
                   const shuffledWoodcocks = [...woodcocks].sort(
@@ -842,9 +839,8 @@ export default function Home() {
                   const remainingWoodcocks =
                     shuffledWoodcocks.slice(woodcocksToKill);
                   setWoodcocks(remainingWoodcocks);
-
                   setTimeout(() => {
-                    setMsPerWorm(msPerWorm * 2);
+                    setMsPerWorm(originalMsPerWorm);
                   }, 180000);
                 }
               }}
