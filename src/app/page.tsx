@@ -673,7 +673,7 @@ export default function Home() {
             <div className="flex justify-between items-start mb-3">
               <p className="text-stone-100 text-lg font-bold">Immortality</p>
             </div>
-            <p>
+            <p className="text-stone-300 text-sm mb-3">
               Chance to reset the age of a Woodcock when it&apos;s supposed to
               die.
             </p>
@@ -722,7 +722,7 @@ export default function Home() {
             <div className="flex justify-between items-start mb-2">
               <p className="text-stone-100 text-lg font-bold">Blaze of Glory</p>
             </div>
-            <p className="text-stone-300 text-xs mb-3">
+            <p className="text-stone-300 text-sm mb-3">
               Triples foraging speed for 30s, then kills all woodcocks.
               (Cooldown: 2 minutes)
             </p>
@@ -791,7 +791,7 @@ export default function Home() {
             <div className="flex justify-between items-start mb-2">
               <p className="text-stone-100 text-lg font-bold">Sacrifice</p>
             </div>
-            <p className="text-stone-300 text-xs mb-3">
+            <p className="text-stone-300 text-sm mb-3">
               Kill 50 random woodcocks for 2x foraging speed for 3 minutes.
               (Cooldown: 10 minutes)
             </p>
@@ -864,7 +864,7 @@ export default function Home() {
             <div className="flex justify-between items-start mb-2">
               <p className="text-stone-100 text-lg font-bold">Pesticides</p>
             </div>
-            <p className="text-stone-300 text-xs mb-3">
+            <p className="text-stone-300 text-sm mb-3">
               50% chance to double all worms, but 50% chance to kill all
               woodcocks. Needs at least 20 woodcocks to gamble.
             </p>
