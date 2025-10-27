@@ -179,6 +179,7 @@ export default function Home() {
   const [birdNames, setBirdNames] = useState<string[]>(
     savedState?.birdNames ?? DEFAULT_BIRD_NAMES
   );
+  const [isDev, setIsDev] = useState<boolean>(false);
 
   const hatchEgg = useCallback(() => {
     const newName = getNextName(woodcocks, birdNames);
@@ -316,6 +317,12 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    setIsDev(
+      typeof window !== "undefined" && window.location.hostname === "localhost"
+    );
+  }, []);
+
   return (
     <div className="min-h-screen bg-stone-950 flex flex-col">
       <style>{scrollbarStyles}</style>
@@ -381,17 +388,16 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col items-center justify-center flex-1 gap-8">
-          {(typeof window !== "undefined" &&
-            window.location.hostname === "localhost" && (
-              <button
-                className="text-5xl font-bold text-white mb-8 text-center"
-                onClick={() => {
-                  setWorms((prev) => prev + 5000000);
-                }}
-              >
-                + 5000000 (dev)
-              </button>
-            )) || (
+          {(isDev && (
+            <button
+              className="text-5xl font-bold text-white mb-8 text-center border-fuchsia-500 border-4 border-dashed"
+              onClick={() => {
+                setWorms((prev) => prev + 5000000);
+              }}
+            >
+              + 5000000 (dev)
+            </button>
+          )) || (
             <h1 className="text-5xl font-bold text-white mb-8 text-center">
               Avis
             </h1>
