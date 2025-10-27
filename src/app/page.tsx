@@ -341,7 +341,7 @@ export default function Home() {
             .map((woodcock, index) => (
               <div
                 key={index}
-                className="bg-stone-900 text-stone-100 p-4 mb-4 shadow-offset-lg"
+                className="bg-stone-900 text-stone-100 p-4 mb-4 shadow-offset"
               >
                 <h2 className="text-xl font-bold mb-2">
                   {woodcock.name} ({woodcock.isAdult ? "Adult" : "Chick"})
@@ -373,7 +373,7 @@ export default function Home() {
               </div>
             ))}
           {woodcocks.length === 0 && (
-            <div className="bg-stone-900 text-stone-100 p-4 mb-4 shadow-offset-lg">
+            <div className="bg-stone-900 text-stone-100 p-4 mb-4 shadow-offset">
               No woodcocks yet. Hatch some eggs, that&apos;s kinda the entire
               point of this! Once you have some woodcocks, they will grow up
               from chicks to adults, and then they&apos;ll start foraging for
@@ -889,7 +889,7 @@ export default function Home() {
 
       {showSettings && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-stone-900 p-6 w-96 max-h-[calc(100vh-100px)] overflow-y-auto custom-scrollbar shadow-offset-lg">
+          <div className="bg-stone-900 p-6 w-96 max-h-[calc(100vh-100px)] overflow-y-auto custom-scrollbar shadow-offset">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold text-white">Settings</h2>
               <button
